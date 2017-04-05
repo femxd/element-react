@@ -306,7 +306,7 @@ class Select extends Component {
       currentPlaceholder = cachedPlaceHolder;
 
       val.forEach(item => {
-        let option = this.options.filter(option => option.props.value === item)[0];
+        let option = options.filter(option => option.props.value === item)[0];
         if (option) {
           this.addOptionToValue(option);
         }
@@ -923,7 +923,8 @@ Select.propTypes = {
   filterMethod: PropTypes.func,
   multiple: PropTypes.bool,
   placeholder: PropTypes.string,
-  onChange: PropTypes.func
+  onChange: PropTypes.func,
+  beforeChangeValue: PropTypes.func,
 }
 
 Select.defaultProps = {
