@@ -1,5 +1,9 @@
 /* @flow */
 
+/**
+ * Updated by Prain at 5.26.2017
+ **/
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ClickOutside from 'react-click-outside';
@@ -25,6 +29,7 @@ type Props = {
   triggerOnFocus: boolean,
   fetchSuggestions: Function,
   onSelect: Function,
+  onChange: Function,
   onIconClick: Function,
   icon: Element | string,
   append: Element,
@@ -92,7 +97,9 @@ class AutoComplete extends Component {
     if (e.target instanceof HTMLInputElement) {
       const value = e.target.value;
 
-      this.setState({ inputValue: value });
+      this.setState({ inputValue: value }, () => {
+        this.props.onChange(e);
+      });
 
       if (!this.props.triggerOnFocus && !value) {
         this.setState({ suggestions: [] }); return;
