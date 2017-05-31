@@ -97,9 +97,8 @@ class AutoComplete extends Component {
     if (e.target instanceof HTMLInputElement) {
       const value = e.target.value;
 
-      this.setState({ inputValue: value }, () => {
-        this.props.onChange(e);
-      });
+      this.setState({ inputValue: value });
+      this.props.onChange(e);
 
       if (!this.props.triggerOnFocus && !value) {
         this.setState({ suggestions: [] }); return;
