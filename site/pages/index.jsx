@@ -1,6 +1,5 @@
 export default {
   documents: {
-    'installation': require('./installation'),
     'quick-start': require('./quick-start'),
     'i18n': require('./i18n'),
     'custom-theme': require('./custom-theme')
@@ -27,6 +26,7 @@ export default {
       'upload': require('./upload'),
       'rate': require('./rate'),
       'color-picker': require('./color-picker'),
+      'transfer': require('./transfer'),
       'form': require('./form')
     },
     'Data': {

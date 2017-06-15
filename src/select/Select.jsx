@@ -9,6 +9,8 @@ import Popper from '../../libs/utils/popper';
 import { Component, PropTypes, Transition, View } from '../../libs';
 import { addResizeListener, removeResizeListener } from '../../libs/utils/resize-event';
 
+import { Scrollbar } from '../scrollbar';
+
 import Tag from '../tag';
 import Input from '../input';
 import i18n from '../locale';
@@ -24,6 +26,7 @@ type State = {
   isSelect: boolean,
   inputLength: number,
   inputWidth: number,
+  inputHovering: boolean,
   filteredOptionsCount: number,
   optionsCount: number,
   hoverIndex: number,
@@ -59,12 +62,13 @@ class Select extends Component {
       isSelect: true,
       inputLength: 20,
       inputWidth: 0,
+      inputHovering: false,
       filteredOptionsCount: 0,
       optionsCount: 0,
       hoverIndex: -1,
       bottomOverflowBeforeHidden: 0,
-      cachedPlaceHolder: props.placeholder,
-      currentPlaceholder: props.placeholder,
+      cachedPlaceHolder: props.placeholder || i18n.t('el.select.placeholder'),
+      currentPlaceholder: props.placeholder || i18n.t('el.select.placeholder'),
       selectedLabel: '',
       selectedInit: false,
       visible: false,
@@ -137,10 +141,6 @@ class Select extends Component {
       if (state.selected.length != this.state.selected.length) {
         this.onSelectedChange(state.selected);
       }
-    } else {
-      if (state.selected != this.state.selected) {
-        this.onSelectedChange(state.selected);
-      }
     }
   }
 
@@ -167,9 +167,7 @@ class Select extends Component {
   }
 
   componentWillUnmount() {
-    if (this.resetInputWidth()){
-      removeResizeListener(this.refs.root, this.resetInputWidth.bind(this));
-    }
+    removeResizeListener(this.refs.root, this.resetInputWidth.bind(this));
 
     if (this.popperJS) {
       this.popperJS.destroy();
@@ -188,7 +186,7 @@ class Select extends Component {
 
   handleValueChange() {
     const { remote, multiple } = this.props;
-    const { value, options, selected } = this.state;
+    const { value, options } = this.state;
 
     if (remote && multiple && Array.isArray(value)) {
       this.setState({
@@ -206,10 +204,6 @@ class Select extends Component {
        if (selected) {
          this.state.selectedLabel = selected.props.label;
        }
-    }
-
-    if (selected) {
-      this.onSelectedChange(selected);
     }
   }
 
@@ -269,6 +263,8 @@ class Select extends Component {
         if (multiple) {
           this.refs.input.focus();
         } else {
+          this.refs.reference.focus();
+
           // this.broadcast('input', 'inputSelect');
         }
       }
@@ -344,15 +340,9 @@ class Select extends Component {
         this.resetInputHeight();
       });
 
-      if (selectedInit) {
-        return this.setState({
-          selectedInit: false
-        });
-      }
-
       valueChangeBySelected = true;
 
-      onChange && onChange(val.map(item => item.props.value));
+      onChange && onChange(val.map(item => item.props.value), val);
 
       // this.dispatch('form-item', 'el.form.change', val);
 
@@ -376,7 +366,7 @@ class Select extends Component {
         });
       }
 
-      onChange && onChange(val.props.value);
+      onChange && onChange(val.props.value, val);
     }
   }
 
@@ -548,6 +538,12 @@ class Select extends Component {
     });
   }
 
+  resetInputWidth() {
+    this.setState({
+      inputWidth: this.reference.getBoundingClientRect().width
+    })
+  }
+
   resetInputHeight() {
     let inputChildNodes = this.reference.childNodes;
     let input = [].filter.call(inputChildNodes, item => item.tagName === 'INPUT')[0];
@@ -691,6 +687,14 @@ class Select extends Component {
     this.setState({ selected });
   }
 
+  handleIconClick(event) {
+    if (this.iconClass().indexOf('circle-close') > -1) {
+      this.deleteSelected(event);
+    } else {
+      this.toggleMenu();
+    }
+  }
+
   onInputChange() {
     if (this.props.filterable && this.state.selectedLabel !== this.state.value) {
       this.setState({
@@ -737,6 +741,8 @@ class Select extends Component {
     } else {
       let optionIndex = -1;
 
+      selected = selected.slice(0);
+
       selected.forEach((item, index) => {
         if (item === option || item.currentLabel() === option.currentLabel()) {
           optionIndex = index;
@@ -751,9 +757,22 @@ class Select extends Component {
     }
 
     this.setState({ selected, selectedLabel }, () => {
-      this.onSelectedChange(this.state.selected);
+      if (!multiple) {
+        this.onSelectedChange(this.state.selected);
+      }
+
       this.setState({ visible });
     });
+  }
+
+  onMouseDown(event) {
+    event.preventDefault();
+
+    if (this.refs.input) {
+      this.refs.input.focus();
+    }
+
+    this.toggleMenu();
   }
 
   onMouseEnter() {
@@ -768,25 +787,16 @@ class Select extends Component {
     })
   }
 
-  resetInputWidth() {
-    this.setState({
-      inputWidth: this.reference.getBoundingClientRect().width
-    })
-  }
-
   render() {
     const { multiple, size, disabled, filterable, loading } = this.props;
     const { selected, inputWidth, inputLength, query, selectedLabel, visible, options, filteredOptionsCount, currentPlaceholder } = this.state;
 
     return (
-      <div ref="root" style={this.style()} className={this.className('el-select', {
-          'is-multiple': multiple,
-          'is-small': size === 'small'
-        })}>
+      <div ref="root" style={this.style()} className={this.className('el-select')}>
         {
           multiple && (
             <div ref="tags" className="el-select__tags" onClick={this.toggleMenu.bind(this)} style={{
-              maxWidth: inputWidth - 32 + 'px'
+              maxWidth: inputWidth - 32
             }}>
               {
                 selected.map(el => {
@@ -798,7 +808,9 @@ class Select extends Component {
                       closable={true}
                       closeTransition={true}
                       onClose={this.deleteTag.bind(this, el)}
-                    >{el.currentLabel()}</Tag>
+                    >
+                      <span className="el-select__tags-text">{el.currentLabel()}</span>
+                    </Tag>
                   )
                 })
               }
@@ -807,21 +819,11 @@ class Select extends Component {
                   <input
                     ref="input"
                     type="text"
-                    className="el-select__input"
+                    className={this.classNames('el-select__input', size && `is-${size}`)}
                     style={{ width: inputLength, maxWidth: inputWidth - 42 }}
+                    disabled={disabled}
                     defaultValue={query}
                     onKeyUp={this.managePlaceholder.bind(this)}
-                    onChange={e => {
-                      clearTimeout(this.timeout);
-
-                      this.timeout = setTimeout(() => {
-                        this.setState({
-                          query: this.state.value
-                        });
-                      }, this.debounce());
-
-                      this.state.value = e.target.value;
-                    }}
                     onKeyDown={e => {
                       this.resetInputState(e);
 
@@ -845,6 +847,17 @@ class Select extends Component {
                           break;
                       }
                     }}
+                    onChange={e => {
+                      clearTimeout(this.timeout);
+
+                      this.timeout = setTimeout(() => {
+                        this.setState({
+                          query: this.state.value
+                        });
+                      }, this.debounce());
+
+                      this.state.value = e.target.value;
+                    }}
                   />
                 )
               }
@@ -857,12 +870,13 @@ class Select extends Component {
           type="text"
           placeholder={currentPlaceholder}
           name="name"
+          size={size}
           disabled={disabled}
           readOnly={!filterable || multiple}
-          icon={this.iconClass()}
-          onChange={e => this.setState({ selectedLabel: e.target.value })}
-          onClick={this.toggleMenu.bind(this)}
-          onIconClick={this.toggleMenu.bind(this)}
+          icon={this.iconClass() || undefined}
+          onChange={value => this.setState({ selectedLabel: value })}
+          onIconClick={this.handleIconClick.bind(this)}
+          onMouseDown={this.onMouseDown.bind(this)}
           onMouseEnter={this.onMouseEnter.bind(this)}
           onMouseLeave={this.onMouseLeave.bind(this)}
           onKeyUp={this.debouncedOnInputChange.bind(this)}
@@ -894,9 +908,13 @@ class Select extends Component {
               minWidth: inputWidth,
             }}>
               <View show={options.length > 0 && filteredOptionsCount > 0 && !loading}>
-                <ul className="el-select-dropdown__list">
+                <Scrollbar
+                  viewComponent="ul"
+                  wrapClass="el-select-dropdown__wrap"
+                  viewClass="el-select-dropdown__list"
+                >
                   {this.props.children}
-                </ul>
+                </Scrollbar>
               </View>
               { this.emptyText() && <p className="el-select-dropdown__empty">{this.emptyText()}</p> }
             </div>
@@ -925,10 +943,6 @@ Select.propTypes = {
   placeholder: PropTypes.string,
   onChange: PropTypes.func,
   beforeChangeValue: PropTypes.func,
-}
-
-Select.defaultProps = {
-  placeholder: i18n.t('el.select.placeholder')
 }
 
 export default ClickOutside(Select);

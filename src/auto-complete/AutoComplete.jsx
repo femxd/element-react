@@ -70,7 +70,9 @@ class AutoComplete extends Component {
     const reference = ReactDOM.findDOMNode(this.inputNode);
 
     if (reference instanceof HTMLElement) {
-      this.suggestionsNode.onVisibleChange(visible, reference.offsetWidth);
+      setTimeout(() => {
+        this.suggestionsNode.onVisibleChange(visible, reference.offsetWidth);
+      })
     }
   }
 
@@ -82,24 +84,18 @@ class AutoComplete extends Component {
 
       if (Array.isArray(suggestions)) {
         this.setState({ suggestions });
-      } else {
-        console.error('autocomplete suggestions must be an array');
       }
     });
   }
 
-  handleChange(e: SyntheticInputEvent): void {
-    if (e.target instanceof HTMLInputElement) {
-      const value = e.target.value;
+  handleChange(value: string): void {
+    this.setState({ inputValue: value });
 
-      this.setState({ inputValue: value });
-
-      if (!this.props.triggerOnFocus && !value) {
-        this.setState({ suggestions: [] }); return;
-      }
-
-      this.getData(value);
+    if (!this.props.triggerOnFocus && !value) {
+      this.setState({ suggestions: [] }); return;
     }
+
+    this.getData(value);
   }
 
   handleFocus(): void {
@@ -117,9 +113,9 @@ class AutoComplete extends Component {
     }, 100);
   }
 
-  handleKeyEnter(): void {
-    if (this.suggestionVisible() && this.state.highlightedIndex >= 0 && this.state.highlightedIndex < this.state.suggestions.length) {
-      this.select(this.state.suggestions[this.state.highlightedIndex]);
+  handleKeyEnter(highlightedIndex: number): void {
+    if (this.suggestionVisible() && highlightedIndex >= 0 && highlightedIndex < this.state.suggestions.length) {
+      this.select(this.state.suggestions[highlightedIndex]);
     }
   }
 

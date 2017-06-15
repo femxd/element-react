@@ -12,52 +12,54 @@ export default class CheckboxGroup extends Component {
 
   constructor(props: Object) {
     super(props);
+
     this.state = {
-      options: this.props.options || []
+      options: this.props.value || []
     };
   }
 
   componentWillReceiveProps(nextProps: Object): void {
-    if (nextProps.options !== this.props.options) {
+    if (nextProps.value !== this.props.value) {
       this.setState({
-        options: nextProps.options
+        options: nextProps.value
       });
     }
   }
 
-  getChildContext (): { isWrap: boolean } {
-    return { isWrap: true };
+  getChildContext(): { ElCheckboxGroup: CheckboxGroup } {
+    return {
+      ElCheckboxGroup: this
+    };
   }
 
-  onChange(e: SyntheticEvent, label: string, value: string): void {
-    const { options } = this.state;
-    let newOptions;
-    if (e.target instanceof HTMLInputElement) {
-      if (e.target.checked) {
-        newOptions = options.concat(value || label);
-      } else {
-        newOptions = options.filter(v =>v !== value && v !== label);
-      }
+  onChange(value: string, checked: boolean): void {
+    const index = this.state.options.indexOf(value);
 
-      this.setState({
-        options: newOptions
-      });
-
-      if (this.props.onChange) {
-        this.props.onChange(newOptions);
+    if (checked) {
+      if (index === -1) {
+        this.state.options.push(value);
       }
+    } else {
+      this.state.options.splice(index, 1);
+    }
+
+    this.forceUpdate();
+
+    if (this.props.onChange) {
+      this.props.onChange(this.state.options);
     }
   }
 
   render(): React.Element<any> {
     const { options } = this.state;
+
     const children = Children.map(this.props.children, (child, index) => {
       return React.cloneElement(
         child,
         Object.assign({}, child.props, {
           key: index,
           checked: child.props.checked || options.indexOf(child.props.value) >= 0 || options.indexOf(child.props.label) >= 0 ,
-          onChange: this.onChange.bind(this),
+          onChange: this.onChange.bind(this, child.props.value || child.props.label),
         }),
       );
     });
@@ -70,11 +72,16 @@ export default class CheckboxGroup extends Component {
   }
 }
 
+CheckboxGroup.childContextTypes = {
+  ElCheckboxGroup: PropTypes.any
+};
+
 CheckboxGroup.propTypes = {
-  options: PropTypes.array,
+  min: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  max: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  size: PropTypes.string,
+  fill: PropTypes.string,
+  textColor: PropTypes.string,
+  value: PropTypes.any,
   onChange: PropTypes.func,
 }
-
-CheckboxGroup.childContextTypes = {
-  isWrap: PropTypes.bool
-};

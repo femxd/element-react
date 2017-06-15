@@ -4,7 +4,7 @@ Displays a global notification message at the upper right corner of the page.
 
 ### Basic usage
 
-::: demo Element has registered the `$notify` method and it receives an object as its parameter. In the simplest case, you can set the `title` field and the` message` field for the title and body of the notification. By default, the notification automatically closes after 4500ms, but by setting `duration` you can control its duration. Specifically, if set to `0`, it will not close automatically. Note that `duration` receives a `Number` in milliseconds.
+::: demo Element has registered the `Notification` method and it receives an object as its parameter. In the simplest case, you can set the `title` field and the` message` field for the title and body of the notification. By default, the notification automatically closes after 4500ms, but by setting `duration` you can control its duration. Specifically, if set to `0`, it will not close automatically. Note that `duration` receives a `Number` in milliseconds.
 
 ```js
 render() {
@@ -123,6 +123,7 @@ In this case you should call `Notification(options)`. We have also registered me
 | iconClass | custom icon's class. It will be overridden by `type` | string | — | — |
 | duration | duration before close. It will not automatically close if set 0 | number | — | 4500 |
 | onClose | callback function when closed | function | — | — |
+| onClick | callback function when notification clicked | function | — | — |
 | offset | offset from the top edge of the screen. Every Notification instance of the same moment should have the same offset | number | — | 0 |
 
 ### Methods

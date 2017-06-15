@@ -98,7 +98,7 @@ render() {
 
 以按钮组的方式出现，常用于多项类似操作。
 
-:::demo 使用`<el-button-group>`标签来嵌套你的按钮。
+:::demo 使用`Button.Group`标签来嵌套你的按钮。
 
 ```js
 render() {
@@ -158,6 +158,7 @@ render() {
 | size     | 尺寸   | string  |   large,small,mini            |    —     |
 | type     | 类型   | string    |   primary,success,warning,danger,info,text |     —    |
 | plain     | 是否朴素按钮   | Boolean    | true,false | false   |
+| loading     | 是否加载中状态   | Boolean    | — | false   |
 | disabled  | 禁用    | boolean   | true, false   | false   |
 | icon  | 图标，已有的图标库中的图标名 | string   |  —  |  —  |
 | nativeType | 原生 type 属性 | string | button,submit,reset | button |

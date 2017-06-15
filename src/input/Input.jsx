@@ -34,11 +34,15 @@ export default class Input extends Component {
   /* <Instance Methods */
 
   focus(): void {
-    (this.refs.input || this.refs.textarea).focus();
+    setTimeout(() => {
+      (this.refs.input || this.refs.textarea).focus();
+    });
   }
 
   blur(): void {
-    (this.refs.input || this.refs.textarea).blur();
+    setTimeout(() => {
+      (this.refs.input || this.refs.textarea).blur();
+    });
   }
 
   /* Instance Methods> */
@@ -50,11 +54,11 @@ export default class Input extends Component {
     return value;
   }
 
-  handleChange(e: SyntheticEvent): void {
+  handleChange(e: SyntheticInputEvent): void {
     const { onChange } = this.props;
 
     if (onChange) {
-      onChange(e);
+      onChange(e.target.value);
     }
 
     this.resizeTextarea();
@@ -70,9 +74,10 @@ export default class Input extends Component {
     if (onBlur) onBlur(e)
   }
 
-  handleIconClick(e: SyntheticEvent): void {
-    const { onIconClick } = this.props;
-    if (onIconClick) onIconClick(e)
+  handleIconClick(): void {
+    if (this.props.onIconClick) {
+      this.props.onIconClick()
+    }
   }
 
   resizeTextarea(): void {
@@ -133,9 +138,10 @@ export default class Input extends Component {
       return (
         <div style={this.style()} className={this.className(classname)} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
           { prepend && <div className="el-input-group__prepend">{prepend}</div> }
-          { typeof icon != 'string' ? icon : <i className={`el-input__icon el-icon-${icon}`} onClick={this.handleIconClick.bind(this)}>{prepend}</i> }
+          { typeof icon === 'string' ? <i className={`el-input__icon el-icon-${icon}`} onClick={this.handleIconClick.bind(this)}>{prepend}</i> : icon }
           <input { ...otherProps }
             ref="input"
+            type={type}
             className="el-input__inner"
             autoComplete={autoComplete}
             onChange={this.handleChange.bind(this)}

@@ -1,24 +1,35 @@
 // @flow
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { Component, PropTypes } from '../../libs';
 import Checkbox from '../checkbox';
 import { getScrollBarWidth } from './utils'
-import type { Column, TableBodyProps, TableBodyState, TableBodyItemProps, TableBodyItemState } from './Types';
+
+import type {
+  TableBodyProps,
+  TableBodyState,
+  TableBodyItemProps,
+  TableBodyItemState
+} from './Types';
 
 class BodyItem extends Component{
   props: TableBodyItemProps;
   state: TableBodyItemState;
+
   constructor(props, context){
     super(props, context);
     this.state = {
-      hover: false
+      hover: false,
+      expand: false
     };
   }
 
   onMouseState(hover){
-    const fixedLeftBody = this.context.$owerTable.refs.fixedLeftBody;
-    const mainBody = this.context.$owerTable.refs.mainBody;
-    const fixedRightBody = this.context.$owerTable.refs.fixedRightBody;
+    const {
+      fixedLeftBody,
+      mainBody,
+      fixedRightBody
+    } = this.context.$owerTable.refs;
 
     fixedLeftBody && fixedLeftBody.hoverRowItem(this.props.rowIndex, hover);
     mainBody && mainBody.hoverRowItem(this.props.rowIndex, hover);
@@ -32,9 +43,11 @@ class BodyItem extends Component{
   }
 
   onToggleSelectedRow(isHiglight, dataItem){
-    const fixedLeftBody = this.context.$owerTable.refs.fixedLeftBody;
-    const mainBody = this.context.$owerTable.refs.mainBody;
-    const fixedRightBody = this.context.$owerTable.refs.fixedRightBody;
+    const {
+      fixedLeftBody,
+      mainBody,
+      fixedRightBody
+    } = this.context.$owerTable.refs;
 
     fixedLeftBody && fixedLeftBody.toggleSelectedRow(isHiglight, dataItem);
     mainBody && mainBody.toggleSelectedRow(isHiglight, dataItem);
@@ -44,14 +57,49 @@ class BodyItem extends Component{
     tableProps.highlightCurrentRow && tableProps.onCurrentChange && tableProps.onCurrentChange(dataItem);
   }
 
-  onChange(e){
+  onChange(checked){
     const { onSelected, itemData } = this.props;
-    const checked = e.target.checked;
     onSelected && onSelected(checked, itemData);
-  } 
+  }
+
+  onExpand(){
+    const { expand } = this.state;
+    const { root } = this.refs;
+
+    this.setState({
+      expand: !expand
+    });
+
+    if(!expand){
+      const table = root.parentNode.parentNode;
+      const index = Array.prototype.slice.apply(
+        root.parentNode.childNodes,
+        [0, root.parentNode.childNodes.length]
+      ).indexOf(root);
+      const row = table.insertRow(index + 1);
+      const td = document.createElement('td');
+
+      td.colSpan = this.props.columns.length;
+      td.className = 'el-table__expanded-cell';
+      row.appendChild(td);
+
+      ReactDOM.render(this.props.columns[0].expandPannel(this.props.itemData), td);
+    }else{
+      root.parentNode.removeChild(root.nextElementSibling);
+    }
+  }
 
   render(){
-    const { itemData, columns, rowIndex, rowClassName, isHiglight, selected } = this.props;
+    const {
+      itemData,
+      columns,
+      rowIndex,
+      rowClassName,
+      isHiglight,
+      selected,
+      leafColumns
+    } = this.props;
+
     const classSet:Object = {
       'hover-row': this.state.hover,
       'current-row': isHiglight
@@ -59,26 +107,31 @@ class BodyItem extends Component{
 
     if(rowClassName){
       const clasName = rowClassName(itemData, rowIndex);
-      classSet[rowClassName] = true;
+      classSet[clasName] = true;
     }
 
     const rootClassName = this.classNames(classSet);
+    const epxandClass = this.classNames({
+      'el-table__expand-icon': true,
+      'el-table__expand-icon--expanded': this.state.expand
+    });
 
     return (
       <tr
+        ref="root"
         onClick={()=>{this.onToggleSelectedRow(!isHiglight, itemData)}}
         className={rootClassName}
         onMouseEnter={()=>{this.onMouseState(true)}}
         onMouseLeave={()=>{this.onMouseState(false)}}>
         {
-          columns.map((column, idx)=>{
+          leafColumns.map((column, idx)=>{
             let content;
             if(column.render){
               content = column.render(itemData, column);
             }else{
               content = itemData[column.property];
             }
-            const className = this.classNames({ 
+            const className = this.classNames({
               'is-hidden': !this.props.fixed && column.fixed,
               'is-center': column.align == 'center',
               'is-right' : column.align == 'right'
@@ -89,12 +142,37 @@ class BodyItem extends Component{
                 className={className}
                 style={{width: column.realWidth}}>
                 {
-                  column.type == 'selection' && <div className="cell"><Checkbox checked={selected} onChange={(e)=>this.onChange(e)}/></div>
+                  column.type == 'selection' &&
+                    <div className="cell">
+                      <Checkbox
+                        checked={selected}
+                        onChange={(e)=>this.onChange(e)}/>
+                    </div>
                 }
                 {
-                  column.type == 'index' && <div className="cell">{rowIndex+1}</div>
+                  column.type == 'index' &&
+                    <div className="cell">
+                      {rowIndex+1}
+                    </div>
                 }
-                { column.type != 'selection' && column.type != 'index' && <div className="cell">{content}</div>}
+                { column.type == 'expand' &&
+                  <div className="cell">
+                    <div
+                      ref="expand"
+                      className={epxandClass}
+                      onClick={this.onExpand.bind(this)}>
+                      <i className="el-icon el-icon-arrow-right"></i>
+                    </div>
+                  </div>
+                }
+
+                { column.type != 'selection' &&
+                   column.type != 'index' &&
+                   column.type != 'expand' &&
+                   <div className="cell">
+                   { content }
+                  </div>
+                }
               </td>
             )
           })
@@ -106,7 +184,7 @@ class BodyItem extends Component{
 
 
 BodyItem.contextTypes = {
-  $owerTable: React.PropTypes.object
+  $owerTable: PropTypes.object
 };
 
 export default class TableBody extends  Component{
@@ -171,16 +249,18 @@ export default class TableBody extends  Component{
   }
 
   render() {
-    const { 
-      columns, 
-      data, 
+    const {
+      columns,
+      data,
       rowClassName,
       fixed,
+      flettenColumns,
       highlightCurrentRow
     } = this.props;
 
     const { highlightRows, selected } = this.state;
     const rowPrefix = this.rowPrefix;
+    const { leafColumns } = flettenColumns;
 
     return (
       <table
@@ -195,7 +275,7 @@ export default class TableBody extends  Component{
               const refId = rowPrefix + dataIdx;
               const isHiglight = (highlightRows[0] == dataItem);
               return (
-                <BodyItem 
+                <BodyItem
                   fixed={fixed}
                   onSelected={(c, d)=>{this.onSelected(c, d)}}
                   selected={selected.indexOf(dataItem) > -1}
@@ -205,6 +285,7 @@ export default class TableBody extends  Component{
                   rowIndex={dataIdx}
                   rowClassName={rowClassName}
                   itemData={dataItem}
+                  leafColumns={leafColumns}
                   columns={columns}/>
               )
             })
@@ -216,5 +297,5 @@ export default class TableBody extends  Component{
 }
 
 TableBody.contextTypes = {
-  $owerTable: React.PropTypes.object
+  $owerTable: PropTypes.object
 };

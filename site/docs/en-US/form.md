@@ -28,14 +28,11 @@ constructor(props) {
 
 onSubmit(e) {
   e.preventDefault();
-
-  console.log('submit!');
 }
 
-onChange(key, e) {
-  this.setState({
-    form: Object.assign(this.state.form, { [key]: e.target ? e.target.value : e })
-  });
+onChange(key, value) {
+  this.state.form[key] = value;
+  this.forceUpdate();
 }
 
 render() {
@@ -73,7 +70,12 @@ render() {
         </Layout.Col>
       </Form.Item>
       <Form.Item label="Instant delivery">
-        <Switch onText="" offText="" value={this.state.form.delivery}></Switch>
+        <Switch
+          onText=""
+          offText=""
+          value={this.state.form.delivery}
+          onChange={this.onChange.bind(this, 'delivery')}
+        />
       </Form.Item>
       <Form.Item label="Activity type">
         <Checkbox.Group value={this.state.form.type} onChange={this.onChange.bind(this, 'type')}>
@@ -122,13 +124,11 @@ constructor(props) {
 
 onSubmit(e) {
   e.preventDefault();
-
-  console.log('submit!');
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign(this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign(this.state.form, { [key]: value })
   });
 }
 
@@ -173,15 +173,13 @@ constructor(props) {
   };
 }
 
-onPositionChange(e) {
-  this.setState({
-    labelPosition: e
-  });
+onPositionChange(value) {
+  this.setState({ labelPosition: value });
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign(this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign(this.state.form, { [key]: value })
   });
 }
 
@@ -277,9 +275,9 @@ handleReset(e) {
   this.refs.form.resetFields();
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign({}, this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign({}, this.state.form, { [key]: value })
   });
 }
 
@@ -428,9 +426,9 @@ handleReset(e) {
   this.refs.form.resetFields();
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign({}, this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign({}, this.state.form, { [key]: value })
   });
 }
 
@@ -516,14 +514,14 @@ addDomain(e) {
   this.forceUpdate();
 }
 
-onEmailChange(e) {
+onEmailChange(value) {
   this.setState({
-    form: Object.assign({}, this.state.form, { email: e.target.value })
+    form: Object.assign({}, this.state.form, { email: value })
   });
 }
 
-onDomainChange(index, e) {
-  this.state.form.domains[index].value = e.target.value;
+onDomainChange(index, value) {
+  this.state.form.domains[index].value = value;
   this.forceUpdate();
 }
 

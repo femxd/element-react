@@ -6,6 +6,7 @@ env:
   - TRAVIS_CI=1
 
 cache:
+  yarn: true
   directories:
     - node_modules
 
@@ -16,6 +17,7 @@ script:
   - npm run lint
   - npm run build
   - npm test
+  - npm run typescript-test
 
 notifications:
   slack: eleme:3Nouwh5OgNugxccCsiFYpUIB

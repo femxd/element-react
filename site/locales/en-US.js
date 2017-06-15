@@ -1,6 +1,5 @@
 module.exports = {
   page: {
-    'installation': 'Installation',
     'quick-start': 'Quick Start',
     'i18n': 'Internationalization',
     'custom-theme': 'Custom Theme',
@@ -22,6 +21,7 @@ module.exports = {
     'upload': 'Upload',
     'rate': 'Rate',
     'color-picker': 'ColorPicker',
+    'transfer': 'Transfer',
     'form': 'Form',
     'table': 'Table',
     'tag': 'Tag',

@@ -1,7 +1,6 @@
 /* @flow */
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 import AsyncValidator from 'async-validator';
 import { Component, PropTypes, Transition } from '../../libs';
 
@@ -44,12 +43,6 @@ export default class FormItem extends Component {
             return false;
           }
         });
-
-        const parent= ReactDOM.findDOMNode(this.parent());
-        if (parent) {
-          parent.addEventListener('blur', this.onFieldBlur.bind(this))
-          parent.addEventListener('change', this.onFieldChange.bind(this))
-        }
       }
     }
   }
@@ -73,7 +66,9 @@ export default class FormItem extends Component {
       return;
     }
 
-    this.validate('change');
+    setTimeout(() => {
+      this.validate('change');
+    });
   }
 
   validate(trigger: string, cb?: Function): boolean | void {
@@ -191,7 +186,7 @@ export default class FormItem extends Component {
         'is-error': error !== '',
         'is-validating': validating,
         'is-required': isRequired || required
-      })}>
+      })} onBlur={this.onFieldBlur.bind(this)} onChange={this.onFieldChange.bind(this)}>
         {
           label && (
             <label className="el-form-item__label" style={this.labelStyle()}>

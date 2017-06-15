@@ -7,6 +7,7 @@
 包括各种表单项，比如输入框、选择器、开关、单选框、多选框等。
 
 ::: demo 在 Form 组件中，每一个表单域由一个 Form-Item 组件构成，表单域中可以放置各种类型的表单控件，包括 Input、Select、Checkbox、Radio、Switch、DatePicker、TimePicker
+
 ```js
 constructor(props) {
   super(props);
@@ -27,14 +28,11 @@ constructor(props) {
 
 onSubmit(e) {
   e.preventDefault();
-
-  console.log('submit!');
 }
 
-onChange(key, e) {
-  this.setState({
-    form: Object.assign(this.state.form, { [key]: e.target ? e.target.value : e })
-  });
+onChange(key, value) {
+  this.state.form[key] = value;
+  this.forceUpdate();
 }
 
 render() {
@@ -72,7 +70,12 @@ render() {
         </Layout.Col>
       </Form.Item>
       <Form.Item label="即时配送">
-        <Switch onText="" offText="" value={this.state.form.delivery}></Switch>
+        <Switch
+          onText=""
+          offText=""
+          value={this.state.form.delivery}
+          onChange={this.onChange.bind(this, 'delivery')}
+        />
       </Form.Item>
       <Form.Item label="活动性质">
         <Checkbox.Group value={this.state.form.type} onChange={this.onChange.bind(this, 'type')}>
@@ -124,9 +127,9 @@ onSubmit(e) {
   console.log('submit!');
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign(this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign(this.state.form, { [key]: value })
   });
 }
 
@@ -170,15 +173,13 @@ constructor(props) {
   };
 }
 
-onPositionChange(e) {
-  this.setState({
-    labelPosition: e
-  });
+onPositionChange(value) {
+  this.setState({ labelPosition: value });
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign(this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign(this.state.form, { [key]: value })
   });
 }
 
@@ -273,9 +274,9 @@ handleReset(e) {
   this.refs.form.resetFields();
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign({}, this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign({}, this.state.form, { [key]: value })
   });
 }
 
@@ -423,9 +424,9 @@ handleReset(e) {
   this.refs.form.resetFields();
 }
 
-onChange(key, e) {
+onChange(key, value) {
   this.setState({
-    form: Object.assign({}, this.state.form, { [key]: e.target ? e.target.value : e })
+    form: Object.assign({}, this.state.form, { [key]: value })
   });
 }
 
@@ -510,14 +511,14 @@ addDomain(e) {
   this.forceUpdate();
 }
 
-onEmailChange(e) {
+onEmailChange(value) {
   this.setState({
-    form: Object.assign({}, this.state.form, { email: e.target.value })
+    form: Object.assign({}, this.state.form, { email: value})
   });
 }
 
-onDomainChange(index, e) {
-  this.state.form.domains[index].value = e.target.value;
+onDomainChange(index, value) {
+  this.state.form.domains[index].value = value;
   this.forceUpdate();
 }
 

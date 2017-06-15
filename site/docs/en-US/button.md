@@ -96,7 +96,7 @@ render() {
 
 Displayed as a button group, can be used to group a series of similar operations.
 
-:::demo Use tag `<el-button-group>` to group your buttons.
+:::demo Use tag `Button.Group` to group your buttons.
 
 ```js
 render() {
@@ -159,5 +159,4 @@ render() {
 | loading   | determine whether it's loading   | Boolean    | — | false   |
 | disabled  | disable the button    | boolean   | —   | false   |
 | icon  | button icon, accepts an icon name of Element icon component | string   |  —  |  —  |
-| autofocus  | same as native button's `autofocus` | boolean   |  —  |  false  |
 | nativeType | same as native button's `type` | string | button/submit/reset | button |

@@ -41,27 +41,38 @@ export default class Checkbox extends Component {
   }
 
   onChange(e: SyntheticEvent): void {
-    const { label } = this.state;
-    const { trueLabel, falseLabel, value} = this.props;
     if (e.target instanceof HTMLInputElement) {
+      const { label } = this.state;
+      const { trueLabel, falseLabel} = this.props;
+
       const checked = e.target.checked;
+      const group = this.context.ElCheckboxGroup;
+
+      if (group) {
+        const length = group.state.options.length + (checked ? 1 : -1);
+
+        if (group.props.min !== undefined && length < group.props.min) {
+          return;
+        }
+
+        if (group.props.max !== undefined && length > group.props.max) {
+          return;
+        }
+      }
+
       let newLabel = label;
 
       if (this.props.trueLabel || this.props.falseLabel) {
         newLabel = checked ? trueLabel : falseLabel;
       }
 
-      if (this.props.onChange) {
-        if (this.context.isWrap) {
-          this.props.onChange(e, label, value);
-        } else {
-          this.props.onChange(e, label, value);
-        }
-      }
-
       this.setState({
         checked: checked,
         label: newLabel,
+      }, () => {
+        if (this.props.onChange) {
+          this.props.onChange(checked);
+        }
       });
     }
   }
@@ -95,31 +106,29 @@ export default class Checkbox extends Component {
           />
         </span>
         <span className="el-checkbox__label">
-          {this.state.label || this.props.children}
+          {this.props.children || this.state.label}
         </span>
       </label>
     )
   }
 }
 
-Checkbox.defaultProps = {
-  checked: false,
-  focus: false,
-  trueLabel: '',
-  falseLabel: '',
-}
+Checkbox.contextTypes = {
+  ElCheckboxGroup: PropTypes.any
+};
 
 Checkbox.propTypes = {
   label: PropTypes.string,
+  trueLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  falseLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   disabled: PropTypes.bool,
   checked: PropTypes.bool,
   indeterminate: PropTypes.bool,
   focus: PropTypes.bool,
-  trueLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  falseLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func
-}
+};
 
-Checkbox.contextTypes = {
-  isWrap: PropTypes.bool
+Checkbox.defaultProps = {
+  checked: false,
+  focus: false
 };

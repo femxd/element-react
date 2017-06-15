@@ -1,201 +1,255 @@
+/* @flow */
+
 import React from 'react';
 import debounce from 'throttle-debounce/debounce';
 
 import { PropTypes, Component } from '../../libs';
-import { watchPropertyChange, IDGenerator } from '../../libs/utils'
-import CollapseTransition from './CollapseTransition'
-import Checkbox from '../checkbox'
+import { watchPropertyChange, IDGenerator } from '../../libs/utils';
+import CollapseTransition from './CollapseTransition';
+import Checkbox from '../checkbox';
 
 
-function NodeContent(props) {
-  const {nodeModel, renderContent, context} = props
+function NodeContent({context, renderContent}) {
+  const {nodeModel, treeNode} = context.props;
 
   if (typeof renderContent === 'function') {
-    return renderContent(Object.freeze(context))
+    return renderContent(nodeModel, nodeModel.data, treeNode.store);
   } else {
-    return <span className="el-tree-node__label">{nodeModel.label}</span>
+    return <span className="el-tree-node__label">{nodeModel.label}</span>;
   }
 }
 
 NodeContent.propTypes = {
-  nodeModel: PropTypes.object.isRequired,
   renderContent: PropTypes.func,
   context: PropTypes.object.isRequired
-}
+};
+
+type State = {
+  childNodeRendered: boolean,
+  isShowCheckbox: boolean
+};
 
 export default class Node extends Component {
+  state: State;
 
-  constructor(props) {
-    super(props)
+  constructor(props: Object) {
+    super(props);
 
     this.state = {
-      expanded: false,
       childNodeRendered: false,
-      isShowCheckbox: false,
-    }
-    this.state.isShowCheckbox = props.treeNode.isShowCheckbox
+      isShowCheckbox: false
+    };
+    this.state.isShowCheckbox = props.treeNode.isShowCheckbox;
 
-    this.oldChecked = false
-    this.oldIndeterminate = false
-    this.idGen = new IDGenerator()
+    this.oldChecked = false;
+    this.oldIndeterminate = false;
+    this.idGen = new IDGenerator();
   }
 
-  componentDidMount() {
-    const nodeModel = this.props.nodeModel
-    const childrenKey = this.props.options.children || 'children'
+  componentDidMount(): void {
+    const nodeModel = this.props.nodeModel;
+    const childrenKey = this.props.options.children || 'children';
 
-    const triggerChange = debounce(20, (...args)=>{
-      if (this.isDeconstructed) return
-      this.handleSelectChange.apply(this, args)
-    })
+    const triggerChange = debounce(20, (...args) => {
+      if (this.isDeconstructed) return;
+      this.handleSelectChange.apply(this, args);
+    });
 
-    this.loadHandler = this.enhanceLoad(nodeModel)
+    this.loadHandler = this.enhanceLoad(nodeModel);
     this.watchers = {
-      [this.idGen.next()]: watchPropertyChange(nodeModel, 'indeterminate', (value) => {
-        triggerChange(nodeModel.checked, value);
+      [this.idGen.next()]: watchPropertyChange(
+        nodeModel,
+        'indeterminate',
+        value => {
+          triggerChange(nodeModel.checked, value);
+        }
+      ),
+      [this.idGen.next()]: watchPropertyChange(nodeModel, 'checked', value => {
+        triggerChange(value, nodeModel.indeterminate);
       }),
-      [this.idGen.next()]: watchPropertyChange(nodeModel, 'checked', (value) => {
-        triggerChange(value, nodeModel.indeterminate)
-      }),
-      [this.idGen.next()]: watchPropertyChange(nodeModel, 'loading', ()=>{
-        this.setState({})
+      [this.idGen.next()]: watchPropertyChange(nodeModel, 'loading', () => {
+        this.setState({});
       })
-    }
+    };
 
     if (nodeModel.data != null) {
-      this.watchers[this.idGen.next()] = watchPropertyChange(nodeModel.data, childrenKey, () => {
-        nodeModel.updateChildren()
-        this.setState({})//force update view
-      })
+      this.watchers[
+        this.idGen.next()
+      ] = watchPropertyChange(nodeModel.data, childrenKey, () => {
+        nodeModel.updateChildren();
+        this.setState({}); //force update view
+      });
     }
   }
 
-  componentWillUnmount() {
-    this.loadHandler()
+  componentWillUnmount(): void {
+    this.loadHandler();
     // clear watchs
     for (let w in this.watchers) {
-      if (this.watchers[w]){
-        this.watchers[w]()
+      if (this.watchers[w]) {
+        this.watchers[w]();
       }
     }
-    this.isDeconstructed = true
+    this.isDeconstructed = true;
   }
 
-  enhanceLoad(nodeModel){
-    const load = nodeModel.load
-    const enhanced = (...args)=>{
-      load.apply(null, args)
-      this.setState({})
-    }
-    nodeModel.load = enhanced
-    return ()=>{
-      nodeModel.load = load
-    }
+  enhanceLoad(nodeModel: Object): Function {
+    const load = nodeModel.load;
+    const enhanced = (...args) => {
+      load.apply(null, args);
+      this.setState({});
+    };
+    nodeModel.load = enhanced;
+    return () => {
+      nodeModel.load = load;
+    };
   }
 
-
-  handleSelectChange(checked, indeterminate) {
-    const {onCheckChange, nodeModel} = this.props
+  handleSelectChange(checked: boolean, indeterminate: boolean): void {
+    const { onCheckChange, nodeModel } = this.props;
 
     // !NOTE: 原码是 && 的关系，感觉有bug
-    if (this.oldChecked !== checked || this.oldIndeterminate !== indeterminate) {
-      onCheckChange(nodeModel.data, checked, indeterminate)
-      this.setState({})//force update
+    if (
+      this.oldChecked !== checked || this.oldIndeterminate !== indeterminate
+    ) {
+      onCheckChange(nodeModel.data, checked, indeterminate);
+      this.setState({}); //force update
     }
 
     this.oldChecked = checked;
     this.oldIndeterminate = indeterminate;
   }
 
-  handleClick() {
-    this.props.treeNode.setCurrentNode(this)
+  getNodeKey(node: any, otherwise: number) {
+    const nodeKey = this.props.nodeKey;
+    if (nodeKey && node) {
+      return node.data[nodeKey];
+    }
+    return otherwise;
   }
 
-  handleExpandIconClick(event) {
-    let target = event.target;
-    const {nodeModel, onNodeClicked} = this.props
-    if (target.tagName.toUpperCase() !== 'DIV' &&
-      target.parentNode.nodeName.toUpperCase() !== 'DIV' ||
-      target.nodeName.toUpperCase() === 'LABEL') return;
-    if (this.state.expanded) {
+
+  handleClick(evt: ?SyntheticEvent): void {
+    if (evt) evt.stopPropagation();
+    const { nodeModel, treeNode } = this.props;
+
+    treeNode.setCurrentNode(this);
+    if (treeNode.props.expandOnClickNode){
+      this.handleExpandIconClick()
+    }
+  }
+
+  handleExpandIconClick(evt: ?SyntheticEvent): void {
+    if (evt) evt.stopPropagation();
+
+    const { nodeModel, parent } = this.props;
+    const {onNodeCollapse, onNodeExpand} = this.props.treeNode.props;
+
+    if (nodeModel.isLeaf) return;
+
+    if (nodeModel.expanded) {
       nodeModel.collapse()
-      this.setState({ expanded: false }, ()=>this.refs.collapse.triggerChange())
+      this.refresh()
+      onNodeCollapse(nodeModel.data, nodeModel, this)
     } else {
       nodeModel.expand(() => {
-        this.setState({ expanded: true, childNodeRendered: true }, ()=>this.refs.collapse.triggerChange())
-      })
+        this.setState({childNodeRendered: true }, () => {
+          onNodeExpand(nodeModel.data, nodeModel, this)
+        });
+        parent.closeSiblings(nodeModel)
+      });
     }
-
-    onNodeClicked(nodeModel.data, nodeModel, this)
-
   }
 
-  handleUserClick() {
-    const nodeModel = this.props.nodeModel
+  closeSiblings(exclude: any){
+    const {treeNode, nodeModel} = this.props;
+    if (!treeNode.props.accordion) return;
+    if (nodeModel.isLeaf || !nodeModel.childNodes || !nodeModel.childNodes.length) return;
+
+    nodeModel.childNodes.filter(e=> e !== exclude).forEach(e=>e.collapse());
+    this.refresh();
+  }
+
+  refresh(){
+    this.setState({})
+  }
+
+  handleUserClick(): void {
+    let {nodeModel, checkStrictly} = this.props.treeNode;
     if (nodeModel.indeterminate) {
-      nodeModel.setChecked(nodeModel.checked, true);
+      nodeModel.setChecked(nodeModel.checked, !checkStrictly);
     }
   }
 
-  handleCheckChange(ev) {
-    const nodeModel = this.props.nodeModel
-    nodeModel.setChecked(ev.target.checked, true);
+  handleCheckChange(checked: boolean): void {
+    this.props.nodeModel.setChecked(checked, true);
   }
 
-  render() {
-    const {childNodeRendered, expanded} = this.state
-    const {treeNode, nodeModel, renderContent, isShowCheckbox} = this.props
+  render(): React.Element<any> {
+    const { childNodeRendered } = this.state;
+    const { treeNode, nodeModel, renderContent, isShowCheckbox } = this.props;
+
+    let expanded = nodeModel.expanded;
 
     return (
       <div
         onClick={this.handleClick.bind(this)}
-        className={this.classNames('el-tree-node', { expanded: childNodeRendered && expanded, 'is-current': treeNode.getCurrentNode() === this })}
-        >
+        className={this.classNames('el-tree-node', {
+          expanded: childNodeRendered && expanded,
+          'is-current': treeNode.getCurrentNode() === this,
+          'is-hidden': !nodeModel.visible
+        })}
+        style={{display: nodeModel.visible ? '': 'none'}}
+      >
         <div
           className="el-tree-node__content"
-          style={{ 'paddingLeft': `${nodeModel.level * 16}px` }}
-          onClick={this.handleExpandIconClick.bind(this)}>
-          <span className={this.classNames('el-tree-node__expand-icon', { 'is-leaf': nodeModel.isLeaf, expanded: !nodeModel.isLeaf && expanded })}></span>
-          {
-            isShowCheckbox && <Checkbox
+          style={{ paddingLeft: `${(nodeModel.level - 1) * treeNode.props.indent}px` }}
+        >
+          <span
+            className={this.classNames('el-tree-node__expand-icon', {
+              'is-leaf': nodeModel.isLeaf,
+              expanded: !nodeModel.isLeaf && expanded
+            })}
+            onClick={this.handleExpandIconClick.bind(this)}
+          />
+          {isShowCheckbox &&
+            <Checkbox
               checked={nodeModel.checked}
               onChange={this.handleCheckChange.bind(this)}
               indeterminate={nodeModel.indeterminate}
-              />
-          }
-          {nodeModel.loading && <span className="el-tree-node__icon el-icon-loading"> </span>}
-          <NodeContent nodeModel={nodeModel} renderContent={renderContent} context={this} />
+              onClick={this.handleUserClick.bind(this)}
+            />}
+          {nodeModel.loading &&
+            <span className="el-tree-node__loading-icon el-icon-loading"> </span>}
+          <NodeContent
+            nodeModel={nodeModel}
+            renderContent={treeNode.props.renderContent}
+            context={this}
+          />
         </div>
         <CollapseTransition isShow={expanded} ref="collapse">
-          <div
-            className="el-tree-node__children">
-            {
-              nodeModel.childNodes.map((e, idx) => {
-                let props = Object.assign({}, this.props, { nodeModel: e })
-                return <Node {...props} key={idx} />
-              })
-            }
+          <div className="el-tree-node__children">
+            {nodeModel.childNodes.map((e, idx) => {
+              let props = Object.assign({}, this.props, { nodeModel: e, parent: this });
+              return <Node {...props} key={this.getNodeKey(e, idx)} />;
+            })}
           </div>
         </CollapseTransition>
       </div>
-    )
+    );
   }
-
 }
 
 Node.propTypes = {
   nodeModel: PropTypes.object,
   options: PropTypes.object,
-  renderContent: PropTypes.func,
   treeNode: PropTypes.object.isRequired,
   isShowCheckbox: PropTypes.bool,
   onCheckChange: PropTypes.func,
-  onNodeClicked: PropTypes.func,
-}
+};
 
 Node.defaultProps = {
   nodeModel: {},
   options: {},
-  onCheckChange() { },
-  onNodeClicked() { },
-}
+  onCheckChange() {},
+};

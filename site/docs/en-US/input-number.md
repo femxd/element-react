@@ -4,7 +4,7 @@ Input numerical values with a customizable range.
 
 ### Basic usage
 
-:::demo Bind a variable to `v-model` in `<el-input-number>` element and you are set.
+:::demo Bind a variable to `value` in `InputNumber` element and you can set default value with `defaultValue`.
 
 ```js
 constructor(props) {
@@ -16,7 +16,7 @@ constructor(props) {
 }
 
 onChange(value) {
-  console.log(value);
+
 }
 
 render() {
@@ -41,7 +41,7 @@ constructor(props) {
 }
 
 onChange(value) {
-  console.log(value);
+
 }
 
 render() {
@@ -68,7 +68,7 @@ constructor(props) {
 }
 
 onChange(value) {
-  console.log(value);
+
 }
 
 render() {

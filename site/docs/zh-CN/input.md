@@ -30,7 +30,7 @@ render() {
 ::: demo 可以通过 `icon` 属性在 input 组件尾部增加显示图标。
 ```js
 handleIconClick(ev) {
-  console.log(ev);
+
 }
 
 render() {
@@ -38,7 +38,7 @@ render() {
     <Input
       icon="time"
       placeholder="请选择日期"
-      onIconClick={e => this.handleIconClick(e)}
+      onIconClick={this.handleIconClick.bind(this)}
     />
   )
 }
@@ -134,7 +134,7 @@ render() {
 
 根据输入内容提供对应的输入建议, 依赖autoComplete
 
-::: demo autocomplete 是一个可带输入建议的输入框组件，
+::: demo Autocomplete 是一个可带输入建议的输入框组件，
 ```js
 constructor(props) {
   super(props);
@@ -209,7 +209,7 @@ createFilter(queryString) {
 }
 
 handleSelect(item) {
-  console.log(item);
+
 }
 
 render() {
@@ -218,19 +218,19 @@ render() {
       <Layout.Col span="12" className="tac">
         <div className="text">激活即列出输入建议</div>
         <AutoComplete
+          placeholder="请输入内容"
           value={this.state.value1}
           fetchSuggestions={this.querySearch.bind(this)}
-          placeholder="请输入内容"
-          select={this.handleSelect.bind(this)}
+          onSelect={this.handleSelect.bind(this)}
         ></AutoComplete>
       </Layout.Col>
       <Layout.Col span="12" className="tac">
         <div className="text">输入后匹配输入建议</div>
         <AutoComplete
+          placeholder="请输入内容"
           value={this.state.value2}
           fetchSuggestions={this.querySearch.bind(this)}
-          placeholder="请输入内容"
-          select={this.handleSelect.bind(this)}
+          onSelect={this.handleSelect.bind(this)}
           triggerOnFocus={false}
         ></AutoComplete>
       </Layout.Col>
@@ -242,9 +242,9 @@ render() {
 
 ### 自定义模板
 
-可自定义输入建议的显示，依赖autoComplete
+可自定义输入建议的显示，依赖AutoComplete
 
-::: demo autocomplete 是一个可带输入建议的输入框组件，
+::: demo Autocomplete 是一个可带输入建议的输入框组件，
 ```js
 constructor(props) {
   super(props);
@@ -318,18 +318,18 @@ createFilter(queryString) {
 }
 
 handleSelect(item) {
-  console.log(item);
+
 }
 
 render() {
   return (
     <AutoComplete
       className="my-autocomplete"
+      icon="edit"
+      placeholder="请输入内容"
       value={this.state.value}
       fetchSuggestions={this.querySearch.bind(this)}
       customItem={this.props.customItem}
-      placeholder="请输入内容"
-      icon="edit"
       onSelect={this.handleSelect.bind(this)}
     ></AutoComplete>
   )
@@ -339,9 +339,9 @@ render() {
 
 ### 远程搜索
 
-从服务端搜索数据，依赖autoComplete
+从服务端搜索数据，依赖AutoComplete
 
-::: demo autocomplete 是一个可带输入建议的输入框组件，
+::: demo Autocomplete 是一个可带输入建议的输入框组件，
 ```js
 constructor(props) {
   super(props);
@@ -419,15 +419,15 @@ createFilter(queryString) {
 }
 
 handleSelect(item) {
-  console.log(item);
+
 }
 
 render() {
   return (
     <AutoComplete
+      placeholder="请输入内容"
       value={this.state.value}
       fetchSuggestions={this.querySearchAsync.bind(this)}
-      placeholder="请输入内容"
       onSelect={this.handleSelect.bind(this)}
     ></AutoComplete>
   )

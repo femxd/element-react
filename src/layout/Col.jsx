@@ -39,17 +39,16 @@ export default class Col extends Component {
           );
         });
       } else {
-        classList.push(`el-col-${size}-${Number(this.props[size])}`);
+        if (this.props[size]) {
+          classList.push(`el-col-${size}-${Number(this.props[size])}`);
+        }
       }
     });
-    
-    return (
-      <div
-        className={this.className('el-col', classList)}
-        style={this.style(this.getStyle())}>
-        {this.props.children}
-      </div>
-    );
+
+    return React.createElement(this.props.tag, {
+      className: this.className('el-col', classList),
+      style: this.style(this.getStyle())
+    }, this.props.children);
   }
 }
 
@@ -65,9 +64,11 @@ Col.propTypes = {
   xs: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.object]),
   sm: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.object]),
   md: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.object]),
-  lg: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.object])
+  lg: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.object]),
+  tag: PropTypes.string
 }
 
 Col.defaultProps = {
-  span: 24
+  span: 24,
+  tag: 'div'
 }

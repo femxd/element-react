@@ -57,19 +57,17 @@ export default class Suggestions extends Component {
   }
 
   onVisibleChange(visible: boolean, inputWidth: string): void {
-    setTimeout(() => {
-      this.setState({
-        dropdownWidth: inputWidth,
-        showPopper: visible
-      })
-    }, 0);
+    this.setState({
+      dropdownWidth: inputWidth,
+      showPopper: visible
+    });
   }
 
   parent(): Component {
     return this.context.component;
   }
 
-  select(item: Object): void {
+  onSelect(item: Object): void {
     this.parent().select(item);
   }
 
@@ -105,7 +103,7 @@ export default class Suggestions extends Component {
                     <li
                       key={index}
                       className={this.classNames({'highlighted': highlightedIndex === index})}
-                      onClick={this.select.bind(this, item)}>
+                      onClick={this.onSelect.bind(this, item)}>
                       {
                         !customItem ? item.value : React.createElement(customItem, {
                           index,

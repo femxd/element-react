@@ -42,7 +42,25 @@ class Cascader extends Component {
     }
 
     this.debouncedInputChange = debounce(props.debounce, () => {
-      this.handleInputChange(this.state.inputValue);
+      const value = this.state.inputValue;
+      const before = this.beforeFilter(value);
+
+      if (before && before.then) {
+        this.state.menu.setState({
+          options: [{
+            __IS__FLAT__OPTIONS: true,
+            label: i18n.t('el.cascader.loading'),
+            value: '',
+            disabled: true
+          }]
+        });
+
+        before.then(() => {
+            this.handleInputChange(value);
+          });
+      } else {
+        this.handleInputChange(value);
+      }
     });
   }
 
@@ -97,6 +115,10 @@ class Cascader extends Component {
     if (this.popperJS) {
       this.popperJS.destroy();
     }
+  }
+
+  placeholder(): string {
+    return this.props.placeholder || i18n.t('el.cascader.placeholder');
   }
 
   updatePopper() {
@@ -279,7 +301,7 @@ class Cascader extends Component {
   }
 
   render() {
-    const { size, disabled, placeholder, filterable, clearable, showAllLevels } = this.props;
+    const { size, disabled, filterable, clearable, showAllLevels } = this.props;
     const { menuVisible, inputHover, inputValue } = this.state;
     const currentLabels = this.currentLabels();
 
@@ -296,9 +318,9 @@ class Cascader extends Component {
           <Input
             ref="input"
             readOnly={!filterable}
-            placeholder={currentLabels.length ? undefined : placeholder}
+            placeholder={currentLabels.length ? undefined : this.placeholder()}
             value={inputValue}
-            onChange={e => { this.setState({inputValue: e.target.value}) }}
+            onChange={value => { this.setState({inputValue: value}) }}
             onKeyUp={this.debouncedInputChange.bind(this)}
             size={size}
             disabled={disabled}
@@ -317,15 +339,15 @@ class Cascader extends Component {
               )
             }
           />
-          <View show={inputValue === ''}>
+          <View show={currentLabels.length}>
             <span className="el-cascader__label">
               {
                 showAllLevels ? currentLabels.map((label, index) => {
                   return (
-                    <span key={index}>
+                    <label key={index}>
                       {label}
                       {index < currentLabels.length - 1 && <span> / </span>}
-                    </span>
+                    </label>
                   )
                 }) : currentLabels[currentLabels.length - 1]
               }
@@ -357,12 +379,12 @@ Cascader.propTypes = {
   showAllLevels: PropTypes.bool,
   debounce: PropTypes.number,
   activeItemChange: PropTypes.func,
+  beforeFilter: PropTypes.func,
   onChange: PropTypes.func
 }
 
 Cascader.defaultProps = {
   value: [],
-  placeholder: i18n.t('el.cascader.placeholder'),
   clearable: false,
   expandTrigger: 'click',
   showAllLevels: true,
