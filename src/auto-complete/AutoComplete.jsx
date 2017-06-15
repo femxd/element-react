@@ -1,5 +1,9 @@
 /* @flow */
 
+/**
+ * Updated by Prain at 5.26.2017
+ **/
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ClickOutside from 'react-click-outside';
@@ -25,6 +29,7 @@ type Props = {
   triggerOnFocus: boolean,
   fetchSuggestions: Function,
   onSelect: Function,
+  onChange: Function,
   onIconClick: Function,
   icon: Element | string,
   append: Element,
