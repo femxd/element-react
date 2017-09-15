@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Component, PropTypes } from '../../libs';
-import { enhanceColumns, calculateBodyWidth, calculateFixedWidth, scheduleLayout } from './mixins';
+import { enhanceColumns, calculateFixedWidth, scheduleLayout } from './mixins';
 import { getScrollBarWidth } from './utils';
 import TableHeader from './TableHeader';
 import TableBody from './TableBody';
@@ -10,7 +10,6 @@ import TableFooter from './TableFooter';
 import i18n from '../locale';
 
 import type {
-  Column,
   TableProps,
   TableState,
   DefaultTableProps
@@ -23,7 +22,7 @@ export default class Table extends Component{
   state: TableState;
   static defaultProps: DefaultTableProps;
 
-  constructor(props:Object, context:Object){
+  constructor(props: Object, context: Object){
     super(props, context);
     this.tableId = tableIdSeed++;
 
@@ -54,7 +53,8 @@ export default class Table extends Component{
 
   getChildContext(){
     return {
-      $owerTable: this
+      $owerTable: this,
+      stripe: this.props.stripe,
     }
   }
 
@@ -75,7 +75,7 @@ export default class Table extends Component{
     }
   }
 
-  componentWillReceiveProps(nextProps:Object){
+  componentWillReceiveProps(nextProps: Object){
     if(nextProps.data != this.props.data){
       this.setState({data: nextProps.data}, ()=>{
         this.initLayout();
@@ -173,7 +173,7 @@ export default class Table extends Component{
     }
   }
 
-  sortBy(sort:number, prop:string, compare:any){
+  sortBy(sort: number, prop: string, compare: any){
     const data = this.state.filterList || this.state.data;
     const sortList = data.slice(0);
 
@@ -189,7 +189,7 @@ export default class Table extends Component{
     }
   }
 
-  filterBy(column:Object, filteCondi:Array<Object>){
+  filterBy(column: Object, filteCondi: Array<Object>){
     const data = this.state.sortList || this.state.data;
 
     const filterList = data.filter((d)=>{
@@ -223,6 +223,11 @@ export default class Table extends Component{
     return {headerLevelColumns, leafColumns};
   }
 
+  clearSelection() {
+    this.refs.mainBody.clearSelect();
+    this.refs.header.cancelAllChecked();
+  }
+
   render() {
     let { fit,
       stripe,
@@ -251,6 +256,7 @@ export default class Table extends Component{
     const rootClassName = this.classNames(
       'el-table',
       {
+        'el-table--enable-row-hover': !fixedLeftColumns.length && !fixedRightColumns.length,
         'el-table--fit': fit,
         'el-table--striped': stripe,
         'el-table--border': border
@@ -261,8 +267,8 @@ export default class Table extends Component{
 
     data = filterList || sortList || data;
 
-    const flettenColumns = this.flattenHeaderColumn();
-    const { leafColumns } = flettenColumns;
+    const flattenColumns = this.flattenHeaderColumn();
+    const { leafColumns } = flattenColumns;
 
     return (
       <div
@@ -276,8 +282,8 @@ export default class Table extends Component{
             ref="header"
             isScrollY={scrollY}
             style={{width: bodyWidth}}
-            flettenColumns={flettenColumns}
-            columns={_columns}/>
+            flattenColumns={flattenColumns}
+            columns={_columns} />
         </div>
 
         <div
@@ -290,9 +296,9 @@ export default class Table extends Component{
             style={{width: bodyWidth}}
             rowClassName={this.props.rowClassName}
             columns={_columns}
-            flettenColumns={flettenColumns}
+            flattenColumns={flattenColumns}
             highlightCurrentRow={highlightCurrentRow}
-            data={data}/>
+            data={data} />
         </div>
         {
           !!fixedLeftColumns.length && (
@@ -305,26 +311,26 @@ export default class Table extends Component{
                   fixed="left"
                   border="border"
                   columns={_columns}
-                  flettenColumns={flettenColumns}
-                  style={{width: '100%', height: '100%'}}/>
+                  flattenColumns={flattenColumns}
+                  style={{width: '100%', height: '100%'}} />
               </div>
               <div
                 className="el-table__fixed-body-wrapper"
                 ref="fixedBodyWrapper"
                 style={{top: realTableHeaderHeight, height: bodyHeight ? (bodyHeight - scrollYWiddth) : ''}}>
-                {data && data.length && 
+                {data && data.length &&
                   <TableBody
                     ref="fixedLeftBody"
                     fixed="left"
                     rowClassName={this.props.rowClassName}
                     columns={_columns}
                     data={data}
-                    flettenColumns={flettenColumns}
+                    flattenColumns={flattenColumns}
                     highlightCurrentRow={highlightCurrentRow}
                     style={{width: bodyWidth}}>
                   </TableBody>
                 }
-                {(!data || data.length === 0) && 
+                {(!data || data.length === 0) &&
                   <div style={{ width: bodyWidth }} className="el-table__empty-block">
                     <span className="el-table__empty-text">{ emptyText || i18n.t('el.table.emptyText') }</span>
                   </div>
@@ -344,8 +350,8 @@ export default class Table extends Component{
               fixed="right"
               border="border"
               columns={_columns}
-              flettenColumns={flettenColumns}
-              style={{width: '100%', height: '100%'}}/>
+              flattenColumns={flattenColumns}
+              style={{width: '100%', height: '100%'}} />
           </div>
           <div
             className="el-table__fixed-body-wrapper"
@@ -357,7 +363,7 @@ export default class Table extends Component{
               rowClassName={this.props.rowClassName}
               columns={_columns}
               data={data}
-              flettenColumns={flettenColumns}
+              flattenColumns={flattenColumns}
               highlightCurrentRow={highlightCurrentRow}
               style={{width: bodyWidth}}>
             </TableBody>
@@ -370,7 +376,7 @@ export default class Table extends Component{
               leafColumns={leafColumns}
               sumText={sumText}
               getSummaries={getSummaries}
-              data={data}/>
+              data={data} />
           )
         }
 
@@ -389,7 +395,8 @@ export default class Table extends Component{
 }
 
 Table.childContextTypes = {
-  $owerTable: PropTypes.object
+  $owerTable: PropTypes.object,
+  stripe: PropTypes.bool,
 };
 
 Table.defaultProps = {

@@ -192,8 +192,9 @@ export default class TableHeader extends  Component{
 
     ReactDom.render(
       <Filter
-        defaultCondi={filterParams.column==columnData?filterParams.condi:null}
+        defaultCondi={filterParams.column == columnData ? filterParams.condi : null}
         onFilter={this.onFilterAction.bind(this, columnData)}
+        popper={this.refs.popper}
         visible={visible}
         onClose={onClose}
         filters={filters}
@@ -223,10 +224,14 @@ export default class TableHeader extends  Component{
     return { x, y }
   }
 
+  cancelAllChecked() {
+    this.setState({ allChecked: false });
+  }
+
   render() {
-    const { style, isScrollY, fixed, flettenColumns } = this.props;
+    const { style, isScrollY, fixed, flattenColumns } = this.props;
     const { sortPropertyName, sortStatus } = this.state;
-    const { leafColumns, headerLevelColumns } = flettenColumns;
+    const { leafColumns, headerLevelColumns } = flattenColumns;
 
     return (
       <table
@@ -297,6 +302,7 @@ export default class TableHeader extends  Component{
                           {
                             column.filterable ? (
                               <span
+                                ref="popper"
                                 className="el-table__column-filter-trigger"
                                 onClick={(e)=>this.onFilter(e, column.filters, column)}>
                                 <i className="el-icon-arrow-down"></i>

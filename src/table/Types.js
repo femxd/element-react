@@ -78,7 +78,7 @@ export type TableHeaderProps = {
   border: string,
   style: Object,
   isScrollY: boolean,
-  flettenColumns: Object
+  flattenColumns: Object
 };
 
 export type TableHeaderState = {
@@ -97,7 +97,7 @@ export type TableBodyProps = {
   highlightCurrentRow: boolean,
   style: Object,
   fixed: string,
-  flettenColumns: Object
+  flattenColumns: Object
 };
 
 export type TableBodyState = {
@@ -123,13 +123,14 @@ export type TableBodyItemState = {
 };
 
 export type TableFooterState = {
-  dataList: Array<Object>
+  dataList: Array<mixed>
 };
 
 export type TableFooterProps = {
   leafColumns: Array<Object>,
   sumText: string,
-  data: Array<Object>
+  data: Array<Object>,
+  getSummaries: (any, any) => mixed
 };
 
 export type FilterProps = {
@@ -139,6 +140,7 @@ export type FilterProps = {
   onClose: ()=>void,
   visible: boolean,
   position: Object,
+  popper: any,
   ower: Object
 };
 

@@ -2,8 +2,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Component, PropTypes } from '../../libs';
+import { getScrollBarWidth } from './utils';
 import Checkbox from '../checkbox';
-import { getScrollBarWidth } from './utils'
 
 import type {
   TableBodyProps,
@@ -92,7 +92,6 @@ class BodyItem extends Component{
   render(){
     const {
       itemData,
-      columns,
       rowIndex,
       rowClassName,
       isHiglight,
@@ -102,7 +101,8 @@ class BodyItem extends Component{
 
     const classSet:Object = {
       'hover-row': this.state.hover,
-      'current-row': isHiglight
+      'current-row': isHiglight,
+      'el-table__row--striped': this.context.stripe && rowIndex % 2 !== 0,
     };
 
     if(rowClassName){
@@ -146,7 +146,7 @@ class BodyItem extends Component{
                     <div className="cell">
                       <Checkbox
                         checked={selected}
-                        onChange={(e)=>this.onChange(e)}/>
+                        onChange={(e)=>this.onChange(e)} />
                     </div>
                 }
                 {
@@ -169,9 +169,7 @@ class BodyItem extends Component{
                 { column.type != 'selection' &&
                    column.type != 'index' &&
                    column.type != 'expand' &&
-                   <div className="cell">
-                   { content }
-                  </div>
+                   <div className="cell">{ content }</div>
                 }
               </td>
             )
@@ -184,7 +182,8 @@ class BodyItem extends Component{
 
 
 BodyItem.contextTypes = {
-  $owerTable: PropTypes.object
+  $owerTable: PropTypes.object,
+  stripe: PropTypes.bool,
 };
 
 export default class TableBody extends  Component{
@@ -248,19 +247,22 @@ export default class TableBody extends  Component{
     onSelectAll && onSelectAll(checked ? data : [], checked);
   }
 
+  clearSelect() {
+    this.setState({ selected: [] });
+  }
+
   render() {
     const {
       columns,
       data,
       rowClassName,
       fixed,
-      flettenColumns,
-      highlightCurrentRow
+      flattenColumns
     } = this.props;
 
     const { highlightRows, selected } = this.state;
     const rowPrefix = this.rowPrefix;
-    const { leafColumns } = flettenColumns;
+    const { leafColumns } = flattenColumns;
 
     return (
       <table
@@ -268,7 +270,8 @@ export default class TableBody extends  Component{
         style={this.style()}
         className={this.classNames('el-table__body')}
         cellPadding={0}
-        cellSpacing={0}>
+        cellSpacing={0}
+      >
         <tbody>
           {
             data.map((dataItem, dataIdx)=>{
@@ -286,7 +289,8 @@ export default class TableBody extends  Component{
                   rowClassName={rowClassName}
                   itemData={dataItem}
                   leafColumns={leafColumns}
-                  columns={columns}/>
+                  columns={columns}
+                />
               )
             })
           }
@@ -297,5 +301,5 @@ export default class TableBody extends  Component{
 }
 
 TableBody.contextTypes = {
-  $owerTable: PropTypes.object
+  $owerTable: PropTypes.object,
 };
